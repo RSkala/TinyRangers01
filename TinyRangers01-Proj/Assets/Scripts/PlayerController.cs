@@ -161,11 +161,10 @@ public class PlayerController : MonoBehaviour
 
     void OnMouseMove(InputValue inputValue)
     {
-        Vector3 mousePosition = inputValue.Get<Vector2>();
+        Vector3 mouseScreenPosition = inputValue.Get<Vector2>();
 
-        // The 2D Orthographic camera's nearClipPlane needs to be used for the z, otherwise the "z" (forward) will be outside the bounds of our game view
-        mousePosition.z = _mainCamera.nearClipPlane; // This is not necessary
-        Vector3 mouseWorldPoint = _mainCamera.ScreenToWorldPoint(mousePosition);
+        // Convert the mouse screen position to the position in the game world
+        Vector3 mouseWorldPoint = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
         _mouseLookDirectionInput = mouseWorldPoint;
 
         // The player has moved their mouse, so use mouse look for the player's gun direction
