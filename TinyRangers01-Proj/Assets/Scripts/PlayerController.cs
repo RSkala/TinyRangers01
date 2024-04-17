@@ -8,6 +8,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _moveSpeed;
     [SerializeField] Transform _projectileWeapon;
 
+    [Header("Debug")]
+    [SerializeField] bool _disableMouseLookInput; // This is used for weapon position adjustment without the mouse look interfering.
+
     // Components
     Rigidbody2D _rigidbody2D;
     SpriteRenderer _spriteRenderer;
@@ -161,6 +164,11 @@ public class PlayerController : MonoBehaviour
 
     void OnMouseMove(InputValue inputValue)
     {
+        if(_disableMouseLookInput)
+        {
+            return;
+        }
+
         Vector3 mouseScreenPosition = inputValue.Get<Vector2>();
 
         // Convert the mouse screen position to the position in the game world
