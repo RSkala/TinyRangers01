@@ -6,7 +6,11 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] float _moveSpeed;
+
+    // TEMP
     [SerializeField] Transform _projectileWeapon;
+    [SerializeField] Transform _weaponFirePointR; // Fire point of weapon when facing right
+    [SerializeField] Transform _weaponFirePointL; // Fire point of weapon when facing left
 
     [Header("Debug")]
     [SerializeField] bool _disableMouseLookInput; // This is used for weapon position adjustment without the mouse look interfering.
@@ -99,11 +103,15 @@ public class PlayerController : MonoBehaviour
             if(_useMouseLook)
             {
                 // Get the direction from the player character to the mouse position
-                Vector2 dirPlayerToMousePos = (_mouseLookDirectionInput - _rigidbody2D.position).normalized; // TODO: Try weapon point for better accuracy
+                //Vector2 dirPlayerToMousePos = (_mouseLookDirectionInput - _rigidbody2D.position).normalized; // TODO: Try weapon point for better accuracy
+                Vector2 projectileWeaponPos = new Vector2(_projectileWeapon.position.x, _projectileWeapon.position.y);
+                Vector2 dirWeaponToMousePos = (_mouseLookDirectionInput - projectileWeaponPos).normalized; // TODO: Try weapon point for better accuracy
 
-                Vector3 cross = Vector3.Cross(Vector2.up, dirPlayerToMousePos);
+                //Vector3 cross = Vector3.Cross(Vector2.up, dirPlayerToMousePos);
+                Vector3 cross = Vector3.Cross(Vector2.up, dirWeaponToMousePos);
                 float flipValue = cross.z < 0.0f ? -1.0f : 1.0f;
-                float rotateAngle = Vector2.Angle(Vector2.up, dirPlayerToMousePos) * flipValue;
+                //float rotateAngle = Vector2.Angle(Vector2.up, dirPlayerToMousePos) * flipValue;
+                float rotateAngle = Vector2.Angle(Vector2.up, dirWeaponToMousePos) * flipValue;
                 //_projectileWeaponRotationPoint.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
                 _projectileWeapon.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
 
@@ -172,6 +180,7 @@ public class PlayerController : MonoBehaviour
         Vector3 mouseScreenPosition = inputValue.Get<Vector2>();
 
         // Convert the mouse screen position to the position in the game world
+        mouseScreenPosition.z = _mainCamera.nearClipPlane;
         Vector3 mouseWorldPoint = _mainCamera.ScreenToWorldPoint(mouseScreenPosition);
         _mouseLookDirectionInput = mouseWorldPoint;
 
@@ -185,5 +194,25 @@ public class PlayerController : MonoBehaviour
     void OnFire(InputValue inputValue)
     {
         Debug.Log("OnFire");
+
+        // TEMP
+        //Weapon_Fire_Point_R
+        //Weapon_Fire_Point_L
+        //Transform projectileFirePoint = _projectileWeapon.Find("Weapon_Fire_Point_R");
+        Transform projectileFirePoint;
+
+        projectileFirePoint = _projectileWeaponFacingDirection == GameManager.SpriteFacingDirection.Right ? _weaponFirePointR : _weaponFirePointL;
+        // switch(_projectileWeaponFacingDirection)
+        // {
+        //     case GameManager.SpriteFacingDirection.Left: _weaponFirePointL; break;
+        // }
+
+        // Always fire the first projectile straight from the weapon firepoint
+        ProjectileBase newProjectile = GameObject.Instantiate(GameManager.Instance.ProjectilePrefab, projectileFirePoint.position, _projectileWeapon.rotation);
+        newProjectile.Init(8.0f, 3.0f, 0.0f);
+
+        // Handle Spread Gun
+        //int totalBulletsSpawned = 1;
+        //float angleMultiple = 1.0f;
     }
 }
