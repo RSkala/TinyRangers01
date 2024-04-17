@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] float _moveSpeed;
+    [SerializeField] Transform _projectileWeapon;
 
     // Components
     Rigidbody2D _rigidbody2D;
@@ -14,22 +15,35 @@ public class PlayerController : MonoBehaviour
 
     // Player input values
     Vector2 _movementDirectionInput;
+    Vector2 _rightStickLookDirectionInput;
+    Vector2 _mouseLookDirectionInput;
+
+    Camera _mainCamera;
+    bool _useMouseLook;
+
+    // Temp weapon sprite value
+    SpriteRenderer _weaponSpriteRenderer; // TEMP
 
     // Facing
     GameManager.SpriteFacingDirection _playerFacingDirection = GameManager.SpriteFacingDirection.Invalid;
+    GameManager.SpriteFacingDirection _projectileWeaponFacingDirection = GameManager.SpriteFacingDirection.Invalid;
 
     // Animation
     int animParam_IsMoving = Animator.StringToHash("IsMoving");
 
     void Start()
     {
-        // Components
+        // Initialize Components
         _rigidbody2D = GetComponent<Rigidbody2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _animator = GetComponent<Animator>();
 
+        _mainCamera = Camera.main;
+        _weaponSpriteRenderer = _projectileWeapon.GetComponentInChildren<SpriteRenderer>();
+
         // Sprite faces right by default
         _playerFacingDirection = GameManager.SpriteFacingDirection.Right;
+        _projectileWeaponFacingDirection = GameManager.SpriteFacingDirection.Right;
 
         CheckValidFields();
     }
@@ -51,6 +65,7 @@ public class PlayerController : MonoBehaviour
     {
         UpdatePlayerAnimStates();
 
+        // Update Movement
         if(!_movementDirectionInput.Equals(Vector2.zero))
         {
             // Move to the new position using the movement direction input
@@ -64,8 +79,39 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Update player facing direction
+        // Update Look
+        if(!_rightStickLookDirectionInput.Equals(Vector2.zero))
+        {
+            Vector3 cross = Vector3.Cross(Vector2.up, _rightStickLookDirectionInput);
+            float flipValue = cross.z < 0.0f ? -1.0f : 1.0f;
+            float rotateAngle = Vector2.Angle(Vector2.up, _rightStickLookDirectionInput) * flipValue;
+            //_projectileWeaponRotationPoint.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
+            _projectileWeapon.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
+
+            // Update the gun facing based on the player's look input direction
+            _projectileWeaponFacingDirection = cross.z >= 0.0f ? GameManager.SpriteFacingDirection.Left : GameManager.SpriteFacingDirection.Right;
+        }
+        else
+        {
+            if(_useMouseLook)
+            {
+                // Get the direction from the player character to the mouse position
+                Vector2 dirPlayerToMousePos = (_mouseLookDirectionInput - _rigidbody2D.position).normalized; // TODO: Try weapon point for better accuracy
+
+                Vector3 cross = Vector3.Cross(Vector2.up, dirPlayerToMousePos);
+                float flipValue = cross.z < 0.0f ? -1.0f : 1.0f;
+                float rotateAngle = Vector2.Angle(Vector2.up, dirPlayerToMousePos) * flipValue;
+                //_projectileWeaponRotationPoint.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
+                _projectileWeapon.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
+
+                // Update the gun facing based on the player's mouse cursor direction
+                _projectileWeaponFacingDirection = cross.z >= 0.0f ? GameManager.SpriteFacingDirection.Left : GameManager.SpriteFacingDirection.Right;
+            }
+        }
+
+        // Update player and weapon facing directions
         UpdatePlayerSpriteFacingDirection();
+        UpdateProjectileWeaponSpriteFacingDirection();
     }
 
     void UpdatePlayerAnimStates()
@@ -82,7 +128,6 @@ public class PlayerController : MonoBehaviour
 
     void UpdatePlayerSpriteFacingDirection()
     {
-        //Debug.Log("_playerFacingDirection: " + _playerFacingDirection);
         switch(_playerFacingDirection)
         {
             case GameManager.SpriteFacingDirection.Right: _spriteRenderer.flipX = false; break;
@@ -91,8 +136,47 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void UpdateProjectileWeaponSpriteFacingDirection()
+    {
+        switch(_projectileWeaponFacingDirection)
+        {
+            case GameManager.SpriteFacingDirection.Right: _weaponSpriteRenderer.flipY = false; break;
+            case GameManager.SpriteFacingDirection.Left: _weaponSpriteRenderer.flipY = true; break;
+            default: break;
+        }
+    }
+
     void OnMove(InputValue inputValue)
     {
         _movementDirectionInput = inputValue.Get<Vector2>();
+    }
+
+    void OnLook(InputValue inputValue)
+    {
+        _rightStickLookDirectionInput = inputValue.Get<Vector2>();
+
+        // The player is using their gamepad's right thumbstick for aiming, so do not use mouse look for aiming the gun
+        _useMouseLook = false;
+    }
+
+    void OnMouseMove(InputValue inputValue)
+    {
+        Vector3 mousePosition = inputValue.Get<Vector2>();
+
+        // The 2D Orthographic camera's nearClipPlane needs to be used for the z, otherwise the "z" (forward) will be outside the bounds of our game view
+        mousePosition.z = _mainCamera.nearClipPlane; // This is not necessary
+        Vector3 mouseWorldPoint = _mainCamera.ScreenToWorldPoint(mousePosition);
+        _mouseLookDirectionInput = mouseWorldPoint;
+
+        // The player has moved their mouse, so use mouse look for the player's gun direction
+        _useMouseLook = true;
+
+        // Clear the lookInput (gamepad right thumbstick)
+        _rightStickLookDirectionInput = Vector2.zero;
+    }
+
+    void OnFire(InputValue inputValue)
+    {
+        Debug.Log("OnFire");
     }
 }
