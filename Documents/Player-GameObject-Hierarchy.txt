@@ -1,0 +1,51 @@
+
+----------------------------
+Player GameObject Hierarchy
+----------------------------
+
+Note:
+* There needs to be a hierarchy so a projectile weapon position and rotation can be adjusted.
+* The weapon sprites were built facing to the right, so a "rotator" parent is needed so the weapon sprite points up.
+* In Unity, I am treating the Up (Y) vector as the forward vector.
+
+Important Note:
+* When building the Player Hierarchy, in the Unity scene view ensure the following are set:
+  * Tool Handle Position:  Pivot
+  * Tool Handle Rotation:  Local
+* This ensures
+
+
+----------------------
+Hierarchy Description:
+----------------------
+
+Player GameObject -> Scripts: PlayerController, PlayerInput, sprite, animator, collider, rigidbody
+ |- Rotation Point -> stays at (0,0,0). This is the object that should be rotated around the Z-axis
+     |- Weapon Positioner -> used for adjusting the Y position, so the weapon is not completely centered
+        | Weapon Rotator -> rotate this +90 degrees around the Z-axis, so the weapon sprite points up
+           |- Weapon Sprite -> Sprite for the weapon. Pos and Rot not adusted.
+           |- Weapon Fire Point -> Adjust to the tip of a gun barrel and fire projectiles from this position. Rotate to point up.
+
+
+-----------------------------------
+Hieararchy Positions and Rotations:
+-----------------------------------
+
+Player GameObject -> Pos: (0,0,0) | Rot: (0,0,0)
+ |- Rotation Point -> Pos: (0,0,0) | Rot: (0,0,0) -> Position only at 0,0,0 if it is center of sprite. Adjust this position to center of player sprite.
+     |- Weapon Positioner -> Pos: (0, <varies>, 0) | Rot: (0,0,0)
+        |- Weapon Rotator -> Pos (0,0,0) | Rot: (0, 90, 0)
+            |- Weapon Sprite -> Pos: (0,0,0) | Rot: (0,0,0)
+            |- Weapon Fire Point -> Pos: Varies | Rot: (0, -90, 0)
+
+
+
+
+--------------------------------------------------
+
+
+--------------------------------------------------
+
+
+
+
