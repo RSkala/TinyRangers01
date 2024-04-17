@@ -1,0 +1,26 @@
+Game / Scene Information:
+
+
+Character / Player Sprites:
+* Character sprites are built at 32x32, but are functionally smaller.
+
+Sprites:
+* I have set the sprite Pixels Per Unit to 16 for the entire game (set in TextureImporter Presets).
+
+
+Camera:
+* Pixel Perfect Camera Component
+  * Assets Pixels Per Unit:  16
+  * Reference Resolution:  480 x 270
+
+
+Reference Resolution Info:
+* 640x360 = 1920x1080 / 3
+* 480x270 = 1920x1080 / 4 => Common pixel art game reference resolution
+* 384x216 = 1920x1080 / 5
+* 320x180 = 1920x1080 / 6 => Common pixel art game reference resolution
+
+I chose 480x270 because the view will be larger compared to 320x180.
+The player character will be smaller on the screen, but players will be able to see more of everything else on the screen.
+I may choose another (possibly uncommon) reference resolution if the player seems to small.
+
