@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D _rigidbody2D;
     SpriteRenderer _spriteRenderer;
     Animator _animator;
+    PlayerInput _playerInput;
 
     // Player input values
     Vector2 _movementDirectionInput;
@@ -30,6 +31,7 @@ public class PlayerController : MonoBehaviour
 
     // Temp weapon sprite value
     SpriteRenderer _weaponSpriteRenderer; // TEMP
+    LineRenderer _lineRenderer;
 
     // Facing
     GameManager.SpriteFacingDirection _playerFacingDirection = GameManager.SpriteFacingDirection.Invalid;
@@ -44,6 +46,7 @@ public class PlayerController : MonoBehaviour
         _rigidbody2D = GetComponent<Rigidbody2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _animator = GetComponent<Animator>();
+        _playerInput = GetComponent<PlayerInput>();
 
         _mainCamera = Camera.main;
         _weaponSpriteRenderer = _projectileWeapon.GetComponentInChildren<SpriteRenderer>();
@@ -51,6 +54,8 @@ public class PlayerController : MonoBehaviour
         // Sprite faces right by default
         _playerFacingDirection = GameManager.SpriteFacingDirection.Right;
         _projectileWeaponFacingDirection = GameManager.SpriteFacingDirection.Right;
+
+        _lineRenderer = gameObject.AddComponent<LineRenderer>();
 
         CheckValidFields();
     }
@@ -65,12 +70,27 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        //var inputActions = _playerInput.actions;
+        //var fireHoldInputAction = _playerInput.actions["FireHold"];
+        //Debug.Log("fireHoldInputAction: " + fireHoldInputAction);
+        //Debug.Log("-----------------------");
+        //Debug.Log("fireHoldInputAction.IsInProgress:          " + fireHoldInputAction.IsInProgress());
+        //Debug.Log("fireHoldInputAction.IsPressed:             " + fireHoldInputAction.IsPressed());
+        //Debug.Log("-");
+
+        //var fireInputAction = _playerInput.actions["Fire"];
+        //Debug.Log("fireInputAction.IsInProgress:          " + fireInputAction.IsInProgress());
+        //Debug.Log("fireInputAction.IsPressed:             " + fireInputAction.IsPressed());
+
+        //Debug.Log("fireHoldInputAction.WasPerformedThisFrame: " + fireHoldInputAction.WasPerformedThisFrame());
+        //Debug.Log("fireHoldInputAction.WasPressedThisFrame:   " + fireHoldInputAction.WasPressedThisFrame());
+        //Debug.Log("fireHoldInputAction.WasReleasedThisFrame:  " + fireHoldInputAction.WasReleasedThisFrame());
         
     }
 
     void FixedUpdate()
     {
-        UpdatePlayerAnimStates();
+        //UpdatePlayerAnimStates();
 
         // Update Movement
         if(!_movementDirectionInput.Equals(Vector2.zero))
@@ -106,23 +126,36 @@ public class PlayerController : MonoBehaviour
                 //Vector2 dirPlayerToMousePos = (_mouseLookDirectionInput - _rigidbody2D.position).normalized; // TODO: Try weapon point for better accuracy
                 Vector2 projectileWeaponPos = new Vector2(_projectileWeapon.position.x, _projectileWeapon.position.y);
                 Vector2 dirWeaponToMousePos = (_mouseLookDirectionInput - projectileWeaponPos).normalized; // TODO: Try weapon point for better accuracy
+                dirWeaponToMousePos = (_mouseLookDirectionInput - new Vector2(_weaponFirePointR.position.x, _weaponFirePointR.position.y)).normalized;
 
                 //Vector3 cross = Vector3.Cross(Vector2.up, dirPlayerToMousePos);
                 Vector3 cross = Vector3.Cross(Vector2.up, dirWeaponToMousePos);
                 float flipValue = cross.z < 0.0f ? -1.0f : 1.0f;
                 //float rotateAngle = Vector2.Angle(Vector2.up, dirPlayerToMousePos) * flipValue;
                 float rotateAngle = Vector2.Angle(Vector2.up, dirWeaponToMousePos) * flipValue;
+
+                rotateAngle = Mathf.Atan2(dirWeaponToMousePos.y, dirWeaponToMousePos.x) * Mathf.Rad2Deg - 90.0f;
+                //Debug.Log("rotateAngle: " + rotateAngle);
                 //_projectileWeaponRotationPoint.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
                 _projectileWeapon.rotation = Quaternion.Euler(0.0f, 0.0f, rotateAngle);
 
                 // Update the gun facing based on the player's mouse cursor direction
                 _projectileWeaponFacingDirection = cross.z >= 0.0f ? GameManager.SpriteFacingDirection.Left : GameManager.SpriteFacingDirection.Right;
+
+                //
+                Vector2 lineEndPos = projectileWeaponPos + dirWeaponToMousePos * 20.0f;
+                _lineRenderer.SetPosition(0, _weaponFirePointR.position);
+                _lineRenderer.SetPosition(1, lineEndPos);
+                _lineRenderer.startWidth = 0.1f;
+                _lineRenderer.endWidth = 0.1f;
             }
         }
 
         // Update player and weapon facing directions
         UpdatePlayerSpriteFacingDirection();
         UpdateProjectileWeaponSpriteFacingDirection();
+
+        
     }
 
     void UpdatePlayerAnimStates()
@@ -214,5 +247,11 @@ public class PlayerController : MonoBehaviour
         // Handle Spread Gun
         //int totalBulletsSpawned = 1;
         //float angleMultiple = 1.0f;
+    }
+
+    void OnFireHold(InputValue inputValue)
+    {
+        var inputVal = inputValue.Get();
+        Debug.Log("OnFireHold - inputValue: " + inputValue.Get().ToString());
     }
 }
